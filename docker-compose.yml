@@ -1,0 +1,35 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:15.0-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=birthday-greetings
+  backend:
+    build: ./src
+    command: sh -c "python manage.py makemigrations && python manage.py migrate && gunicorn --workers=2 --bind 0.0.0.0:8000 config.wsgi:application"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    volumes:
+      - static_data:/usr/birthday-greetings/src/static
+    env_file:
+      - ./src/.env
+  nginx:
+    build: ./nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - static_data:/usr/birthday-greetings/src/static
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  static_data:
