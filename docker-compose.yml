@@ -12,7 +12,7 @@ services:
       - POSTGRES_DB=birthday-greetings
   backend:
     build: ./src
-    command: sh -c "python manage.py makemigrations && python manage.py migrate && gunicorn --workers=2 --bind 0.0.0.0:8000 config.wsgi:application"
+    command: sh -c "python manage.py makemigrations logic && python manage.py migrate && gunicorn --workers=2 --bind 0.0.0.0:8000 config.wsgi:application"
     ports:
       - "8000:8000"
     depends_on:
