@@ -3,6 +3,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from api.serializers import UserSerializer
 
+
 class UserRegistrationView(views.APIView):
 
     permission_classes = [
