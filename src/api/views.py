@@ -6,7 +6,7 @@ from api.serializers import UserSerializer
 class UserRegistrationView(views.APIView):
 
     permission_classes = [
-        permissions.AllowAny # Or anon users can't register
+        permissions.AllowAny
     ]
 
     def post(self, request):
