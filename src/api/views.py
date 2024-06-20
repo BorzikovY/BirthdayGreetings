@@ -5,7 +5,7 @@ from rest_framework import (
     views, 
     viewsets, 
     status, 
-    permissions
+    permissions,
 )
 
 from drf_yasg.utils import swagger_auto_schema
@@ -45,15 +45,28 @@ class UserRegistrationView(views.APIView):
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Пользователь успешно создан."}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
 
 
 class UserViewSet(
-    viewsets.GenericViewSet, 
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    mixins.UpdateModelMixin
+        viewsets.GenericViewSet, 
+        mixins.ListModelMixin,
+        mixins.RetrieveModelMixin,
+        mixins.UpdateModelMixin,
+        mixins.DestroyModelMixin
     ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def destroy(self, request: Request, pk=None) -> Response:
+        """Удаляет аккаунт пользователя."""
+        user = self.get_object()
+        if user == request.user:
+            user.delete()
+            return Response(
+                {'message': 'Аккаунт успешно удален.'},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        else:
+            return Response({'detail': 'Недостаточно прав.'}, status=status.HTTP_403_FORBIDDEN)
