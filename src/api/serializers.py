@@ -4,17 +4,19 @@ from logic.models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'password', 'email')
+        fields = ('full_name', 'password', 'email', 'birth_date')
 
     def create(self, validated_data):
-        username = validated_data.get('username')
+        full_name = validated_data.get('full_name')
         password = validated_data.get('password')
         email = validated_data.get('email')
+        birth_date = validated_data.get('birth_date')
 
         user = User.objects.create_user(
-            username=username,
+            full_name=full_name,
             password=password,
             email=email,
+            birth_date=birth_date
         )
 
         return user

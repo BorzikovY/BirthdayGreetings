@@ -1,7 +1,5 @@
 from django.contrib import admin
-from logic.models import User
+from logic.models import User, Subscription
 
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    pass
+admin.site.register(User)
+admin.site.register(Subscription)
