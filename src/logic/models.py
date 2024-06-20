@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone
 from django.db import models
 from logic.validators import validate_full_name
 from logic.managers import UserManager
@@ -56,6 +57,10 @@ class Subscription(models.Model):
         on_delete=models.CASCADE,
         related_name='subscriptions_as_birthday_person',
         verbose_name='Именинник',
+    )
+    notification_time = models.TimeField(
+        verbose_name='Время напоминания',
+        default=timezone.now,
     )
     cron_job_id = models.CharField(
         verbose_name="id задачи cron",

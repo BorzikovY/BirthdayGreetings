@@ -1,11 +1,17 @@
 from rest_framework import serializers
-from logic.models import User
+from logic.models import User, Subscription
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'password', 'email', 'birth_date')
+        fields = (
+            'id', 
+            'full_name', 
+            'password', 
+            'email', 
+            'birth_date',
+        )
 
     def create(self, validated_data):
         full_name = validated_data.get('full_name')
@@ -26,4 +32,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'full_name', 'email', 'birth_date')    
+        fields = ('id', 'full_name', 'email', 'birth_date',) 
+        read_only_fields = ('id',)   
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    birthday_person = UserSerializer()
+
+    class Meta:
+        model = Subscription
+        fields = ('birthday_person', 'notification_time',)

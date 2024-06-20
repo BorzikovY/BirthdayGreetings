@@ -1,6 +1,5 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from api.views import UserRegistrationView
 from rest_framework import permissions
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -8,7 +7,11 @@ from rest_framework_simplejwt.views import (
 )
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-from api.views import UserViewSet
+from api.views import (
+    UserRegistrationView,
+    UserViewSet,
+    SubscriptionViewSet,
+)
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -23,6 +26,7 @@ schema_view = get_schema_view(
 
 router = DefaultRouter()
 router.register('users', UserViewSet, basename='user')
+router.register('subscriptions', SubscriptionViewSet, basename='subscription')
 
 urlpatterns = [
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

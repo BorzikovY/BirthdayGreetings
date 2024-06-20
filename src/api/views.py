@@ -11,10 +11,11 @@ from rest_framework import (
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from logic.models import User
+from logic.models import User, Subscription
 from api.serializers import (
     UserRegisterSerializer,
     UserSerializer,
+    SubscriptionSerializer,
 )
 
 
@@ -70,3 +71,18 @@ class UserViewSet(
             )
         else:
             return Response({'detail': 'Недостаточно прав.'}, status=status.HTTP_403_FORBIDDEN)
+
+class SubscriptionViewSet(
+    viewsets.GenericViewSet,
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.DestroyModelMixin,
+    ):
+    serializer_class = SubscriptionSerializer
+
+    def get_queryset(self):
+        return Subscription.objects.filter(subscriber=self.request.user)    
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     return super().retrieve(request, *args, **kwargs)
