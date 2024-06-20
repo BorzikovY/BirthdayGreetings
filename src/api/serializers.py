@@ -37,8 +37,26 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
-    birthday_person = UserSerializer()
+    birthday_person = UserSerializer(read_only=True)
 
     class Meta:
         model = Subscription
-        fields = ('birthday_person', 'notification_time',)
+        fields = ('id', 'birthday_person', 'notification_time',)
+
+
+class SubscriptionCreateSerializer(serializers.ModelSerializer):
+    birthday_person_id = serializers.IntegerField(
+        source='birthday_person.id',
+        write_only=True,
+    )
+
+    class Meta:
+        model = Subscription
+        fields = ['id', 'birthday_person_id', 'notification_time']
+
+
+class UpdateNotificationTimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = ['notification_time']
+    

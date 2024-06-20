@@ -1,5 +1,6 @@
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from rest_framework import (
     mixins,
     views, 
@@ -16,14 +17,14 @@ from api.serializers import (
     UserRegisterSerializer,
     UserSerializer,
     SubscriptionSerializer,
+    SubscriptionCreateSerializer,
+    UpdateNotificationTimeSerializer,
 )
 
 
 class UserRegistrationView(views.APIView):
 
-    permission_classes = [
-        permissions.AllowAny
-    ]
+    permission_classes = [permissions.AllowAny]
 
     @swagger_auto_schema(
         request_body=openapi.Schema(
@@ -51,14 +52,22 @@ class UserRegistrationView(views.APIView):
 
 
 class UserViewSet(
-        viewsets.GenericViewSet, 
-        mixins.ListModelMixin,
-        mixins.RetrieveModelMixin,
-        mixins.UpdateModelMixin,
-        mixins.DestroyModelMixin
+    viewsets.GenericViewSet, 
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin
     ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def update(self, request: Request, pk=None) -> Response:
+        """Обновляет данные пользователя, если запрос отправлен авторизованным пользователем."""
+        if pk == str(request.user.pk):
+            return Response(self.serializer_class.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Недостаточно прав.'}, status=status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request: Request, pk=None) -> Response:
         """Удаляет аккаунт пользователя."""
@@ -66,23 +75,60 @@ class UserViewSet(
         if user == request.user:
             user.delete()
             return Response(
-                {'message': 'Аккаунт успешно удален.'},
+                {'detail': 'Аккаунт успешно удален.'},
                 status=status.HTTP_204_NO_CONTENT
             )
         else:
             return Response({'detail': 'Недостаточно прав.'}, status=status.HTTP_403_FORBIDDEN)
 
+
 class SubscriptionViewSet(
     viewsets.GenericViewSet,
     mixins.ListModelMixin,
     mixins.RetrieveModelMixin,
-    mixins.CreateModelMixin,
     mixins.DestroyModelMixin,
     ):
-    serializer_class = SubscriptionSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Subscription.objects.filter(subscriber=self.request.user)    
+        """
+        Получаем подписки только для указанного подписчика
+        """
+        return Subscription.objects.filter(subscriber=self.request.user)
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return SubscriptionCreateSerializer
+        elif self.request.method == 'PUT':
+            return UpdateNotificationTimeSerializer
+        return SubscriptionSerializer
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.validated_data['subscriber'] = request.user
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
 
-    # def retrieve(self, request, *args, **kwargs):
-    #     return super().retrieve(request, *args, **kwargs)
+    @action(detail=True, methods=['PUT'], url_path='notification-time')
+    def update_notification_time(self, request, pk=None):
+        subscription = self.get_object()
+        serializer = UpdateNotificationTimeSerializer(
+            subscription, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    def destroy(self, request, birthday_person_pk=None, pk=None):
+        """
+        Удаляем подписку
+        """
+        subscription = self.get_object()
+        if subscription.subscriber != request.user:
+            return Response({"detail": "Недостаточно прав для удаления"}, status=403)
+
+        subscription.delete()
+
+        return Response(status=204)
