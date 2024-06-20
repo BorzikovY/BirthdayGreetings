@@ -2,7 +2,7 @@ from rest_framework import serializers
 from logic.models import User
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'full_name', 'password', 'email', 'birth_date')
@@ -21,3 +21,9 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
         return user
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'email', 'birth_date')    

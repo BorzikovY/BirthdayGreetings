@@ -12,7 +12,10 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from logic.models import User
-from api.serializers import UserSerializer
+from api.serializers import (
+    UserRegisterSerializer,
+    UserSerializer,
+)
 
 
 class UserRegistrationView(views.APIView):
@@ -39,7 +42,7 @@ class UserRegistrationView(views.APIView):
         )
     )
     def post(self, request: Request) -> Response:
-        serializer = UserSerializer(data=request.data)
+        serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -52,6 +55,5 @@ class UserViewSet(
     mixins.RetrieveModelMixin,
     mixins.UpdateModelMixin
     ):
-    permission_classes = ()
     queryset = User.objects.all()
     serializer_class = UserSerializer
