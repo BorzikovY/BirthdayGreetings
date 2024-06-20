@@ -47,12 +47,19 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
     birthday_person_id = serializers.IntegerField(
         source='birthday_person.id',
-        write_only=True,
+        required=True,
     )
 
     class Meta:
         model = Subscription
         fields = ['id', 'birthday_person_id', 'notification_time']
+
+    def create(self, validated_data):
+        birthday_person_id = validated_data.pop('birthday_person')['id']
+        birthday_person = User.objects.get(id=birthday_person_id)
+        validated_data['birthday_person'] = birthday_person
+        validated_data['subscriber'] = self.context['request'].user
+        return super().create(validated_data)
 
 
 class UpdateNotificationTimeSerializer(serializers.ModelSerializer):

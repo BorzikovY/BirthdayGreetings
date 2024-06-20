@@ -62,12 +62,11 @@ class UserViewSet(
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def update(self, request: Request, pk=None) -> Response:
+    def update(self, request: Request, pk=None, *args, **kwargs) -> Response:
         """Обновляет данные пользователя, если запрос отправлен авторизованным пользователем."""
-        if pk == str(request.user.pk):
-            return Response(self.serializer_class.data, status=status.HTTP_200_OK)
-        else:
-            return Response({'detail': 'Недостаточно прав.'}, status=status.HTTP_403_FORBIDDEN)
+        if pk == str(request.user.pk) and User.objects.get(id=pk):
+            return super().update(request, *args, **kwargs)
+        return Response({"detail": "Недостаточно прав."}, status=status.HTTP_403_FORBIDDEN)
 
     def destroy(self, request: Request, pk=None) -> Response:
         """Удаляет аккаунт пользователя."""
@@ -106,11 +105,20 @@ class SubscriptionViewSet(
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.validated_data['subscriber'] = request.user
-        serializer.save()
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=201, headers=headers)
-
+        print(serializer.validated_data)
+        if user := User.objects.filter(id=serializer.validated_data['birthday_person']['id']).first():
+            if not Subscription.objects.filter(subscriber=self.request.user, birthday_person=user):
+                serializer.validated_data['subscriber'] = request.user
+                serializer.save()
+                return Response(serializer.data, status=201)
+            return Response(
+                {'detail': 'Вы уже подписаны на этого пользователя'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return Response(
+            {'detail': 'Пользователь с таким id не существует'},
+            status=status.HTTP_403_FORBIDDEN
+        )
     @action(detail=True, methods=['PUT'], url_path='notification-time')
     def update_notification_time(self, request, pk=None):
         subscription = self.get_object()
@@ -119,7 +127,7 @@ class SubscriptionViewSet(
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, birthday_person_pk=None, pk=None):
         """
