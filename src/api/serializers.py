@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from logic.models import User
 
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('full_name', 'password', 'email', 'birth_date')
+        fields = ('id', 'full_name', 'password', 'email', 'birth_date')
 
     def create(self, validated_data):
         full_name = validated_data.get('full_name')
