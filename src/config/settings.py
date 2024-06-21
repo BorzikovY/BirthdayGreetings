@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework_simplejwt',
+    'django_apscheduler',
     'drf_yasg',
     'logic',
     'api',
@@ -127,6 +128,8 @@ DATABASES = {
     }
 }
 
+DB_URL = config.get("db_url")
+
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
@@ -157,7 +160,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-AUTH_USER_MODEL = 'logic.User'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -167,3 +169,8 @@ STATIC_ROOT = BASE_DIR / 'static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+
+AUTH_USER_MODEL = 'logic.User'
+
+EMAIL_HOST_USER = config.get('email_host_user')
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
