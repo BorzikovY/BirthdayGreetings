@@ -3,6 +3,7 @@ from logic.models import User, Subscription
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
+    """Сериализатор пользователя при регистрации."""
     class Meta:
         model = User
         fields = (
@@ -14,6 +15,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
+        """Создает пользователя."""
         full_name = validated_data.get('full_name')
         password = validated_data.get('password')
         email = validated_data.get('email')
@@ -30,6 +32,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор пользователя."""
     class Meta:
         model = User
         fields = ('id', 'full_name', 'email', 'birth_date',) 
@@ -37,6 +40,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
+    """Сериализатор подписки."""
     birthday_person = UserSerializer(read_only=True)
 
     class Meta:
@@ -45,6 +49,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 
 class SubscriptionCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор создания подписки."""
     birthday_person_id = serializers.IntegerField(
         source='birthday_person.id',
         required=True,
@@ -55,6 +60,9 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'birthday_person_id', 'notification_time']
 
     def create(self, validated_data):
+        """
+        Создает подписку.
+        """
         birthday_person_id = validated_data.pop('birthday_person')['id']
         birthday_person = User.objects.get(id=birthday_person_id)
         validated_data['birthday_person'] = birthday_person
@@ -63,6 +71,7 @@ class SubscriptionCreateSerializer(serializers.ModelSerializer):
 
 
 class UpdateNotificationTimeSerializer(serializers.ModelSerializer):
+    """Сериализатор изменения времени отправки напоминания,"""
     class Meta:
         model = Subscription
         fields = ['notification_time']

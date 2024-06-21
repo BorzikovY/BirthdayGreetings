@@ -6,6 +6,7 @@ from logic.managers import UserManager
 
 
 class User(AbstractUser):
+    """Модель пользователя."""
     first_name = None
     last_name = None
     username = None
@@ -46,6 +47,7 @@ class User(AbstractUser):
 
 
 class Subscription(models.Model):
+    """Модель подписки на пользователя."""
     subscriber = models.ForeignKey(
         User,
         on_delete=models.CASCADE,

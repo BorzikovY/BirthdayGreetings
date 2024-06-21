@@ -23,6 +23,7 @@ from api.serializers import (
 
 
 class UserRegistrationView(views.APIView):
+    """View регистрации пользователя."""
 
     permission_classes = [permissions.AllowAny]
 
@@ -44,6 +45,7 @@ class UserRegistrationView(views.APIView):
         )
     )
     def post(self, request: Request) -> Response:
+        """Регистрирует нового пользователя."""
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -58,23 +60,28 @@ class UserViewSet(
     mixins.UpdateModelMixin,
     mixins.DestroyModelMixin
     ):
+    """
+    ViewSet пользователя.
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def update(self, request: Request, pk=None, *args, **kwargs) -> Response:
-        """Обновляет данные пользователя, если запрос отправлен авторизованным пользователем."""
+    def update(self, request: Request, pk: str=None, *args, **kwargs) -> Response:
+        """Обновляет данные пользователя."""
         if pk == str(request.user.pk) and User.objects.get(id=pk):
             return super().update(request, *args, **kwargs)
         return Response({"detail": "Недостаточно прав."}, status=status.HTTP_403_FORBIDDEN)
 
-    def destroy(self, request: Request, pk=None) -> Response:
-        """Удаляет аккаунт пользователя."""
+    def destroy(self, request: Request, pk: str=None) -> Response:
+        """
+        Удаляет пользователя.
+        """
         user = self.get_object()
         if user == request.user:
             user.delete()
             return Response(
-                {'detail': 'Аккаунт успешно удален.'},
+                {'detail': 'Пользователь успешно удален.'},
                 status=status.HTTP_204_NO_CONTENT
             )
         else:
@@ -87,6 +94,9 @@ class SubscriptionViewSet(
     mixins.RetrieveModelMixin,
     mixins.DestroyModelMixin,
     ):
+    """
+    ViewSet подписки.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -102,15 +112,17 @@ class SubscriptionViewSet(
             return UpdateNotificationTimeSerializer
         return SubscriptionSerializer
     
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        """
+        Создает подписку на пользователя.
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        print(serializer.validated_data)
         if user := User.objects.filter(id=serializer.validated_data['birthday_person']['id']).first():
             if not Subscription.objects.filter(subscriber=self.request.user, birthday_person=user):
                 serializer.validated_data['subscriber'] = request.user
                 serializer.save()
-                return Response(serializer.data, status=201)
+                return Response(serializer.data, status=status.HTTP_201_CREATED_201)
             return Response(
                 {'detail': 'Вы уже подписаны на этого пользователя'},
                 status=status.HTTP_403_FORBIDDEN
@@ -119,8 +131,12 @@ class SubscriptionViewSet(
             {'detail': 'Пользователь с таким id не существует'},
             status=status.HTTP_403_FORBIDDEN
         )
+
     @action(detail=True, methods=['PUT'], url_path='notification-time')
-    def update_notification_time(self, request, pk=None):
+    def update_notification_time(self, request: Request, pk: str=None) -> Response:
+        """
+        Обновляет время отправки напоминаний.
+        """
         subscription = self.get_object()
         serializer = UpdateNotificationTimeSerializer(
             subscription, data=request.data, partial=True
@@ -129,9 +145,9 @@ class SubscriptionViewSet(
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def destroy(self, request, birthday_person_pk=None, pk=None):
+    def destroy(self, request, birthday_person_pk: str=None, pk: str=None):
         """
-        Удаляем подписку
+        Удаляет подписку на пользователя.
         """
         subscription = self.get_object()
         if subscription.subscriber != request.user:
