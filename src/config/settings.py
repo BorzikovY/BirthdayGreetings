@@ -123,7 +123,7 @@ DATABASES = {
         "NAME": config.get("db_name", ),
         "USER": config.get("db_user"),
         "PASSWORD": config.get("db_password"),
-        # "HOST": config.get("db_host"),
+        "HOST": config.get("db_host"),
         "PORT": config.get("db_port"),
     }
 }
